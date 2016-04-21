@@ -25,59 +25,50 @@
 
     </ScrollView>
 
-    <RelativeLayout
+    <!-- cover -->
+    <LinearLayout
         android:id="@+id/coverLayout"
         android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:background="@color/transparent_white"
         android:layout_height="match_parent"
         >
 
-        <!-- bottom -->
+        <!-- 拖动按钮 -->
         <LinearLayout
-            android:id="@+id/bottom_layout"
+            android:id="@+id/drag_layout"
             android:layout_width="match_parent"
-            android:orientation="vertical"
+            android:layout_height="wrap_content"
             android:background="@color/transparent_white"
-            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginTop="100dp"
             >
-
-            <!-- 拖动按钮 -->
-            <LinearLayout
-                android:id="@+id/drag_layout"
-                android:layout_width="match_parent"
+            <ImageView
+                android:id="@+id/drag_tv"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/transparent_white"
-                android:orientation="vertical"
-                android:layout_marginTop="100dp"
-                >
-                <ImageView
-                    android:id="@+id/drag_tv"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:scaleType="centerCrop"
-                    android:src="@mipmap/ic_launcher"/>
-            </LinearLayout>
+                android:layout_gravity="center_horizontal"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher"/>
+        </LinearLayout>
 
-            <ScrollView
-                android:id="@+id/bottom_sv"
-                android:background="@color/bottom_bg"
+        <ScrollView
+            android:id="@+id/bottom_sv"
+            android:background="@color/bottom_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/bottom_content"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <TextView
-                        android:id="@+id/bottom_content"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </ScrollView>
-        </LinearLayout>
-
-
-    </RelativeLayout>
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
 
 
 

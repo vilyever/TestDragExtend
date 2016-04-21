@@ -14,7 +14,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -23,7 +22,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private static String TAG = "MainActivity";
 
     private ScrollView mTopScrollView, mBottomScrollView;
-    private LinearLayout mBottomLayout;
+//    private LinearLayout mBottomLayout;
     private ImageView mDragButton;
     private TextView mTopContentTv, mBottomContentTv;
 
@@ -62,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     private void initViews(View rootView) {
         mTopScrollView = findView(rootView, R.id.top_sv);
-        mBottomLayout = findView(rootView, R.id.bottom_layout);
+//        mBottomLayout = findView(rootView, R.id.bottom_layout);
         mDragButton = findView(rootView, R.id.drag_tv);
         mBottomScrollView = findView(rootView, R.id.bottom_sv);
 
@@ -120,16 +119,45 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
 
+    /**
+     * 改动了布局文件
+     * 布局现为
+     * 底层一层铺满根视图的 显示示例文本
+     *
+     * 上面覆盖一层铺满根视图的  coverLayout
+     * coverLayout是纵向布局的LinearLayout
+     *
+     * 从上到下有一个 横向布满根视图的拖动视图（内部有一个image图标）
+     * 下方是一个显示 示例文本的视图
+     *
+     * 拖动实现：
+     * 修改包含拖动图标image的拖动视图的topMargin
+     */
+    private LinearLayout coverLayout;
+    protected LinearLayout getCoverLayout() { if (this.coverLayout == null) { this.coverLayout = (LinearLayout) findViewById(R.id.coverLayout); } return this.coverLayout; }
 
-    private RelativeLayout coverLayout;
-    protected RelativeLayout getCoverLayout() { if (this.coverLayout == null) { this.coverLayout = (RelativeLayout) findViewById(R.id.coverLayout); } return this.coverLayout; }
-
+    /**
+     * 是否正在拖拽
+     */
     boolean dragging = false;
 
+    /**
+     * 每次touch事件开始时
+     * 是否保存初始值
+     *
+     * 即ACTION_DOWN时的坐标值保存与否
+     */
     boolean initialTouchSet = false;
+
+    /**
+     * ACTION_DOWN时的坐标值
+     */
     int initialTouchX;
     int initialTouchY;
 
+    /**
+     * 上一次touch事件的坐标值
+     */
     int lastTouchX;
     int lastTouchY;
 
@@ -137,6 +165,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public boolean onTouch(View v, MotionEvent e) {
         final int action = MotionEventCompat.getActionMasked(e);
 
+        /**
+         * 如果初始坐标没有保存
+         * 设置初始坐标
+         * 即手指接触屏幕时的坐标
+         * 这里的坐标使用getRawX()，getRawY()
+         * 即坐标轴的0,0起始点是屏幕的左上角
+         */
         if (!this.initialTouchSet) {
             this.initialTouchX = this.lastTouchX = (int) (e.getRawX() + 0.5f);
             this.initialTouchY = this.lastTouchY = (int) (e.getRawY() + 0.5f);
@@ -147,49 +182,88 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             case MotionEvent.ACTION_DOWN:
                 break;
             case MotionEvent.ACTION_MOVE: {
+                /**
+                 * ACTION_MOVE时的屏幕坐标
+                 */
                 final int x = (int) (e.getRawX() + 0.5f);
                 final int y = (int) (e.getRawY() + 0.5f);
 
+                /**
+                 * 若果当前不是拖拽状态
+                 * 判断手指滑动的距离是否达到最小的拖拽距离要求
+                 * 是则开始进入拖拽状态
+                 *
+                 *
+                 * 此步可以略过不判断，直接进入拖拽状态
+                 */
                 if (!this.dragging) {
+                    /**
+                     * 当前触摸坐标与ACTION_DOWN初始坐标差值
+                     */
                     final int dx = x - this.initialTouchX;
                     final int dy = y - this.initialTouchY;
 
+                    /**
+                     * 系统默认的最小拖动距离
+                     */
                     int touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
 
-                    if (Math.abs(dx) > touchSlop) {
-                        this.lastTouchX = this.initialTouchX + touchSlop * (dx < 0 ? -1 : 1);
-                        this.dragging = true;
-                    }
-                    else if (Math.abs(dy) > touchSlop) {
-                        this.lastTouchY = this.initialTouchY + touchSlop * (dy < 0 ? -1 : 1);
-                        this.dragging = true;
-                    }
+                    /**
+                     * 横向或纵向的移动距离超过了最小拖动距离
+                     * 则进入拖拽模式
+                     */
+                    this.dragging = (Math.abs(dx) > touchSlop) || (Math.abs(dy) > touchSlop);
 
                     if (this.dragging) {
-                        final int oldAction = e.getAction();
-                        e.setAction(MotionEvent.ACTION_CANCEL);
-                        v.onTouchEvent(e);
-                        e.setAction(oldAction);
 
+                        /**
+                         * 记录当前触摸坐标值
+                         */
+                        this.lastTouchX = x;
+                        this.lastTouchY = y;
+
+                        /**
+                         * 传出拖拽开始的回调
+                         */
                         onDraggingBegin();
                     }
                 }
                 else {
+                    /**
+                     * 计算当前坐标与上一次坐标的差值
+                     */
                     int dx = x - this.lastTouchX;
                     int dy = y - this.lastTouchY;
 
+                    /**
+                     * 记录当前触摸坐标值
+                     */
                     this.lastTouchX = x;
                     this.lastTouchY = y;
 
+                    /**
+                     * 传出拖拽变化的回调
+                     */
                     onDragging(dx, dy);
                 }
             }
             break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
+                /**
+                 * 若当前处于拖拽模式
+                 * 结束拖拽
+                 */
                 if (this.dragging) {
+                    /**
+                     * 传出拖拽结束的回调
+                     */
                     onDraggingEnd();
 
+                    /**
+                     * 初始设置标记置为false
+                     * 以便下次touch开始时重新记录初始坐标
+                     */
                     this.initialTouchSet = false;
                     this.dragging = false;
                 }
@@ -204,9 +278,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     private void onDragging(int dx, int dy) {
+
+        /**
+         * 修改拖拽视图的topMargin以移动拖拽视图
+         */
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mDragLayout.getLayoutParams();
         params.topMargin += dy;
 
+        // TODO: 2016/4/21 最小能拖动到多高的位置
         params.topMargin = Math.max(params.topMargin, 0);
         // TODO: 2016/4/21 最大能拖动到多低的位置
         params.topMargin = Math.min(params.topMargin, getCoverLayout().getHeight() - mDragLayout.getHeight());
